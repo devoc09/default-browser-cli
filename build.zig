@@ -13,8 +13,13 @@ pub fn build(b: *std.Build) void {
         }),
     });
 
+    // add dependency
+    const clap = b.dependency("clap", .{});
+    exe.root_module.addImport("clap", clap.module("clap"));
+
     // Core Services フレームワークをリンク
-    exe.linkFramework("CoreServices");
+    // exe.linkFramework("CoreServices");
+    exe.root_module.linkFramework("CoreServices", .{});
 
     b.installArtifact(exe);
 
