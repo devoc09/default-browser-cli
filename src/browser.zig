@@ -7,3 +7,5 @@ const impl = switch (builtin.os.tag) {
 
 pub const listInstalledBrowsers = impl.listInstalledBrowsers;
 pub const setDefaultBrowser = impl.setDefaultBrowser;
+pub const getInstalledBrowserIds = impl.getInstalledBrowserIds;
+pub const getDefaultBrowser = impl.getDefaultBrowser;

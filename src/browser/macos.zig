@@ -56,6 +56,42 @@ fn cfStringToSlice(cfStr: CFStringRef, buffer: []u8) ?[]const u8 {
     return null;
 }
 
+pub fn getInstalledBrowserIds(allocator: std.mem.Allocator) ![][]const u8 {
+    const schemeCFString = createCFString("https") orelse return error.CFStringCreationFailed;
+    defer CFRelease(schemeCFString);
+
+    const handlers = LSCopyAllHandlersForURLScheme(schemeCFString) orelse return error.NoHandlersFound;
+    defer CFRelease(handlers);
+
+    const count: usize = @intCast(CFArrayGetCount(handlers));
+    const ids = try allocator.alloc([]const u8, count);
+    errdefer allocator.free(ids);
+
+    var valid_count: usize = 0;
+    for (0..count) |i| {
+        const value = CFArrayGetValueAtIndex(handlers, @intCast(i)) orelse continue;
+        const bundleIdCFString: CFStringRef = @ptrCast(value);
+
+        var buffer: [256]u8 = undefined;
+        if (cfStringToSlice(bundleIdCFString, &buffer)) |bundleId| {
+            ids[valid_count] = try allocator.dupe(u8, bundleId);
+            valid_count += 1;
+        }
+    }
+
+    return ids[0..valid_count];
+}
+
+pub fn getDefaultBrowser(buffer: []u8) ?[]const u8 {
+    const schemeCFString = createCFString("https") orelse return null;
+    defer CFRelease(schemeCFString);
+
+    const defaultHandler = LSCopyDefaultHandlerForURLScheme(schemeCFString) orelse return null;
+    defer CFRelease(defaultHandler);
+
+    return cfStringToSlice(defaultHandler, buffer);
+}
+
 pub fn listInstalledBrowsers() !void {
     const schemeCFString = createCFString("https") orelse return error.CFStringCreationFailed;
     defer CFRelease(schemeCFString);
@@ -107,11 +143,10 @@ pub fn setDefaultBrowser(bundleId: [*:0]const u8) !void {
         defer CFRelease(schemeCFString);
 
         const status = LSSetDefaultHandlerForURLScheme(schemeCFString, browserCFString);
-        if (status != 0) {
-            std.debug.print("Failed to set handler for {s}: error {d}\n", .{ scheme, status });
+        // -54 is returned when macOS shows confirmation dialog; change still succeeds
+        if (status != 0 and status != -54) {
+            std.debug.print("Error: failed to set handler for {s}: {d}\n", .{ scheme, status });
             return error.LSSetHandlerFailed;
         }
     }
-
-    std.debug.print("Default browser set to: {s}\n", .{bundleId});
 }
