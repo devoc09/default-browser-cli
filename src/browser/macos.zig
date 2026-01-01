@@ -78,7 +78,6 @@ pub fn listInstalledBrowsers() !void {
     defer CFRelease(handlers);
 
     const count = CFArrayGetCount(handlers);
-    std.debug.print("Installed browsers:\n", .{});
 
     var i: isize = 0;
     while (i < count) : (i += 1) {
@@ -89,9 +88,9 @@ pub fn listInstalledBrowsers() !void {
         if (cfStringToSlice(bundleIdCFString, &buffer)) |bundleId| {
             const isDefault = if (defaultSlice) |def| std.mem.eql(u8, bundleId, def) else false;
             if (isDefault) {
-                std.debug.print("  * {s} (default)\n", .{bundleId});
+                std.debug.print("\x1b[32m* {s}\x1b[0m\n", .{bundleId});
             } else {
-                std.debug.print("    {s}\n", .{bundleId});
+                std.debug.print("  {s}\n", .{bundleId});
             }
         }
     }
