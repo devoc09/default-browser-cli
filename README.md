@@ -8,7 +8,7 @@ A CLI tool to list installed browsers and manage the default browser.
 - Display the current default browser (highlighted in green with `*`)
 - Set the default browser for http/https URL schemes
 
-## Supported OSj
+## Supported OS
 
 - [x] macOS
 - [ ] Linux
